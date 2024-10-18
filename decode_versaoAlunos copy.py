@@ -84,9 +84,7 @@ def main():
     frequencias_picos = [xf[i] for i in i_peaks]
     maiores_picos = sorted(zip(frequencias_picos, valores_picos), key=lambda x: x[1], reverse=True)[:5] #retorna uma lista de tuplas, o primeiro da tupla é a frequencia e o segundo a amplitude
     #printe os picos encontrados! 
-    print(maiores_picos)
-    
-    
+    print(f'Os maiores picos são: {maiores_picos}')
     
     #Alguns dos picos  (na verdade 2 deles) devem ser bem próximos às frequências do DTMF enviadas!
     #Para descobrir a tecla pressionada, você deve encontrar na tabela DTMF frquências que coincidem com as 2 das 5 que você selecionou.
@@ -102,23 +100,32 @@ def main():
         941: {1209: 'X', 1336: '0', 1477: '#', 1633: 'D'}
     }
 
-    # Encontrar as frequências mais próximas da tabela DTMF
     frequencias_baixas = [679, 770, 825, 941]
     frequencias_altas = [1209, 1336, 1477, 1633]
+    
+    def erro_percentual(f_encontrada, f_real):
+        return abs(f_encontrada - f_real) / f_real * 100
 
-    # Encontrar a frequência baixa mais próxima
+    # Encontrar a frequência baixa mais próxima e calcular o erro
     f1 = min(frequencias_baixas, key=lambda x: min([abs(x - f[0]) for f in maiores_picos]))
+    erro_f1 = min([erro_percentual(f[0], f1) for f in maiores_picos])
 
-    # Encontrar a frequência alta mais próxima
+    # Encontrar a frequência alta mais próxima e calcular o erro
     f2 = min(frequencias_altas, key=lambda x: min([abs(x - f[0]) for f in maiores_picos]))
+    erro_f2 = min([erro_percentual(f[0], f2) for f in maiores_picos])
 
-    # Encontrar a tecla correspondente
-    tecla = dtmf_table.get(f1, {}).get(f2, None)
-
-    if tecla:
-        print(f"Tecla detectada: {tecla} (frequências: {f1} Hz e {f2} Hz)")
+    # Verificar se o erro é menor que 10% para ambas as frequências
+    if erro_f1 > 10 or erro_f2 > 10:
+        print("Som não corresponde a nenhuma tecla.")
     else:
-        print("Nenhuma tecla DTMF foi detectada.")
+        # Encontrar a tecla correspondente
+        tecla = dtmf_table.get(f1, {}).get(f2, None)
+
+        if tecla:
+            print(f"Tecla detectada: {tecla} (frequências: {f1} Hz e {f2} Hz)")
+        else:
+            print("Nenhuma tecla DTMF foi detectada.")
+
 
     #Você pode tentar também identificar a tecla de um telefone real! Basta gravar o som emitido pelo seu celular ao pressionar uma tecla.       
     ## Exiba gráficos do fourier do som gravados 
